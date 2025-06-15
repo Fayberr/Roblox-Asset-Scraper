@@ -20,3 +20,16 @@ Run the script and choose the mode:
 
 ```bash
 python rblx_scraper.py
+```
+
+## Requirements
+
+- Python 3.x
+- Request Library
+- tqdm library for progress bar
+
+Install dependencies with:
+
+```bash
+pip install requests tqdm
+```
