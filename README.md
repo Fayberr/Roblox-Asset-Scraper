@@ -6,7 +6,7 @@ Download Roblox assets easily. Supports:
 - Bulk download from a list of asset IDs in a file (`assets.txt`)  
 - Download all decals from a Roblox user profile by user ID  
 
-## Features
+## 🚀Features
 
 - Saves assets as PNG files with proper names  
 - Prevents duplicate filenames by adding suffixes  
@@ -14,7 +14,7 @@ Download Roblox assets easily. Supports:
 - Warns if the user inventory is private  
 - Organizes downloads in folders by mode and count  
 
-## Usage
+## 🛠 Usage
 
 Run the script and choose the mode:
 
