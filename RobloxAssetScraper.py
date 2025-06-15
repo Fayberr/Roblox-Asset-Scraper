@@ -6,6 +6,8 @@ from tqdm import tqdm
 API_INVENTORY = "https://inventory.roproxy.com/v2/users/{}/inventory"
 API_THUMBNAIL = "https://thumbnails.roblox.com/v1/assets"
 
+BASE_DIRS = ["SingleScrapes", "MassScrapes", "ProfileScrapes"]
+
 def sanitize_filename(name):
     return "".join(c for c in name if c.isalnum() or c in (" ", "_", "-")).strip()
 
@@ -18,14 +20,21 @@ def ensure_unique_filename(folder, base_name):
         counter += 1
     return candidate
 
-def get_folder_with_number(base):
-    counter = 1
-    folder = f"{base}{counter}"
-    while os.path.exists(folder):
+def ensure_base_dirs():
+    for d in BASE_DIRS:
+        if not os.path.exists(d):
+            os.makedirs(d)
+            print(f"[+] Created base folder: {d}")
+
+def get_folder_with_number(base_dir, base_name):
+    counter = 0
+    while True:
+        suffix = f"_{counter}" if counter > 0 else ""
+        folder = os.path.join(base_dir, f"{base_name}{suffix}")
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            return folder
         counter += 1
-        folder = f"{base}{counter}"
-    os.makedirs(folder)
-    return folder
 
 def input_retry(prompt, valid_options=None):
     while True:
@@ -77,23 +86,17 @@ def download_asset(asset_id, name, folder):
 
 def profile_mode():
     user_id = input("Profile ID: ").strip()
-    print("➤ Fetching decals...")
-    decals = get_decals_for_user(user_id)
-    if decals is None:
-        print("Aborting due to private inventory or error.")
-        return
     res = requests.get(f"https://users.roblox.com/v1/users/{user_id}")
     if res.status_code == 200:
         username = res.json().get("name", f"profile{user_id}")
     else:
         username = f"profile{user_id}"
-    base_folder = f"{username}"
-    counter = 1
-    folder = f"{base_folder}_{counter}"
-    while os.path.exists(folder):
-        counter +=1
-        folder = f"{base_folder}_{counter}"
-    os.makedirs(folder)
+    print(f"\u2794 Fetching details from {username}...")
+    decals = get_decals_for_user(user_id)
+    if decals is None:
+        print("Aborting due to private inventory or error.")
+        return
+    folder = get_folder_with_number("ProfileScrapes", username)
     print(f"✅ {len(decals)} decals found, downloading...")
     for d in tqdm(decals, desc="Downloading Decals", unit="asset"):
         aid = d["assetId"]
@@ -101,7 +104,7 @@ def profile_mode():
         download_asset(aid, name, folder)
 
 def single_mode():
-    folder = get_folder_with_number("single")
+    folder = get_folder_with_number("SingleScrapes", "Single")
     while True:
         asset_id = input("Asset ID: ").strip()
         if not asset_id.isdigit():
@@ -119,7 +122,7 @@ def single_mode():
             break
 
 def mass_mode():
-    folder = get_folder_with_number("mass")
+    folder = get_folder_with_number("MassScrapes", "Mass")
     try:
         with open("assets.txt","r") as f:
             lines = f.readlines()
@@ -133,6 +136,7 @@ def mass_mode():
         time.sleep(0.3)
 
 def main():
+    ensure_base_dirs()
     mode = input_retry("Mode? (single/mass/profile): ", ["single","mass","profile"])
     if mode == "profile":
         profile_mode()
